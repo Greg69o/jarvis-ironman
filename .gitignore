@@ -1,0 +1,27 @@
+# Environnement
+.env
+venv/
+env/
+__pycache__/
+*.pyc
+
+# Données
+data/
+*.db
+*.sqlite
+
+# Clés API
+config.json
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
