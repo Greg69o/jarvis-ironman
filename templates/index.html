@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JARVIS - Assistant Personnel IA</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Courier New', monospace;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
+            color: #00ff00;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+        
+        .container {
+            width: 90%;
+            max-width: 800px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #00ff00;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
+            animation: fadeIn 0.5s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 1px solid #00ff00;
+            padding-bottom: 15px;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            text-shadow: 0 0 10px #00ff00;
+            letter-spacing: 3px;
+        }
+        
+        .header p {
+            color: #00cc00;
+            margin-top: 5px;
+        }
+        
+        .chat-box {
+            height: 400px;
+            background: rgba(10, 10, 10, 0.9);
+            border: 1px solid #00ff00;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .message {
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            animation: slideIn 0.3s ease-in;
+        }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-10px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        
+        .user-message {
+            background: rgba(0, 100, 0, 0.3);
+            border-left: 3px solid #00ff00;
+            align-self: flex-end;
+            max-width: 80%;
+        }
+        
+        .jarvis-message {
+            background: rgba(0, 50, 0, 0.3);
+            border-left: 3px solid #00cc00;
+            align-self: flex-start;
+            max-width: 80%;
+        }
+        
+        .sender {
+            font-weight: bold;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+            color: #00ff00;
+        }
+        
+        .input-area {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        input[type="text"] {
+            flex: 1;
+            padding: 12px;
+            background: rgba(0, 30, 0, 0.5);
+            border: 1px solid #00ff00;
+            border-radius: 5px;
+            color: #00ff00;
+            font-family: 'Courier New', monospace;
+            font-size: 1em;
+        }
+        
+        input[type="text"]::placeholder {
+            color: #00cc00;
+        }
+        
+        input[type="text"]:focus {
+            outline: none;
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+        }
+        
+        button {
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #00ff00, #00cc00);
+            color: #000;
+            border: none;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s;
+            font-family: 'Courier New', monospace;
+        }
+        
+        button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.6);
+        }
+        
+        button:active {
+            transform: scale(0.95);
+        }
+        
+        .mic-btn {
+            width: 50px;
+            padding: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .status {
+            text-align: center;
+            color: #00cc00;
+            font-size: 0.9em;
+            padding: 10px;
+            background: rgba(0, 30, 0, 0.3);
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+        
+        .listening {
+            animation: pulse 1s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⚙️ JARVIS</h1>
+            <p>Assistant Personnel IA • Toujours à votre service</p>
+        </div>
+        
+        <div class="chat-box" id="chatBox"></div>
+        
+        <div class="input-area">
+            <input 
+                type="text" 
+                id="commandInput" 
+                placeholder="Entrez une commande ou une question..."
+                autocomplete="off"
+            >
+            <button id="sendBtn" class="send-btn">Envoyer</button>
+            <button id="micBtn" class="mic-btn" title="Microphone">🎤</button>
+        </div>
+        
+        <div class="status" id="status">Prêt</div>
+    </div>
+    
+    <script>
+        const chatBox = document.getElementById('chatBox');
+        const commandInput = document.getElementById('commandInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const micBtn = document.getElementById('micBtn');
+        const status = document.getElementById('status');
+        
+        // Ajouter un message au chat
+        function addMessage(text, sender) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}-message`;
+            messageDiv.innerHTML = `
+                <div class="sender">${sender === 'user' ? 'Vous' : 'JARVIS'}</div>
+                <div>${text}</div>
+            `;
+            chatBox.appendChild(messageDiv);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+        
+        // Envoyer une commande
+        async function sendCommand() {
+            const command = commandInput.value.trim();
+            if (!command) return;
+            
+            addMessage(command, 'user');
+            commandInput.value = '';
+            
+            status.textContent = 'JARVIS réfléchit...';
+            
+            try {
+                const response = await fetch('/api/command', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ command })
+                });
+                
+                const data = await response.json();
+                addMessage(data.response, 'jarvis');
+                status.textContent = 'Prêt';
+            } catch (error) {
+                addMessage('Erreur de communication', 'jarvis');
+                status.textContent = 'Erreur';
+                console.error(error);
+            }
+        }
+        
+        // Événements
+        sendBtn.addEventListener('click', sendCommand);
+        commandInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendCommand();
+        });
+        
+        micBtn.addEventListener('click', () => {
+            status.textContent = '🎤 Écoute...';
+            status.classList.add('listening');
+            // Logique de reconnaissance vocale à implémenter
+        });
+        
+        // Message initial
+        window.addEventListener('load', () => {
+            addMessage('Bonjour! Comment puis-je vous aider?', 'jarvis');
+        });
+    </script>
+</body>
+</html>
